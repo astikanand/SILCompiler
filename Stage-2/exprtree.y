@@ -1,0 +1,52 @@
+%{
+	#include <stdio.h>
+	#include <stdlib.h>
+	#include <string.h>
+	#define YYSTYPE tnode *
+	#include "exprtree.h"
+	#include "exprtree.c"
+	int yylex(void);
+%}
+
+%token NUM PLUS MINUS MUL DIV END
+%left PLUS MINUS
+%left MUL DIV
+
+%%
+
+Program : BEGIN Slist END
+        | BEGIN END
+
+Slist : Slist Stmt
+      | Stmt
+
+Stmt : InputStmt
+     | OuptputStmt
+	 | AsgStmt
+
+InputStmt : READ(ID);
+
+OutputStmt : WRITE(E);
+
+AsgStmt : ID = E;
+
+expr : expr PLUS expr		{$$ = makeOperatorNode('+',$1,$3);}
+	 | expr MINUS expr  	{$$ = makeOperatorNode('-',$1,$3);}
+	 | expr MUL expr	{$$ = makeOperatorNode('*',$1,$3);}
+	 | expr DIV expr	{$$ = makeOperatorNode('/',$1,$3);}
+	 | '(' expr ')'		{$$ = $2;}
+	 | NUM			{$$ = $1;}
+	 ;
+
+%%
+
+yyerror(char const *s)
+{
+    printf("yyerror %s",s);
+}
+
+
+int main(void) {
+	yyparse();
+	return 0;
+}

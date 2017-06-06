@@ -1,0 +1,245 @@
+struct tnode* createEmptyTreeNode() {
+    struct tnode* temp;
+    temp = (struct tnode*)malloc(sizeof(struct tnode));
+    temp->Ptr1 = temp->Ptr2 = temp->Ptr3 = NULL;
+    temp->TYPE = -1;
+    return temp;
+}
+
+struct tnode *treeCreate(int TYPE, int NODETYPE, int VALUE, char *NAME, struct tnode* Ptr1, struct tnode* Ptr2, struct tnode* Ptr3){
+
+	struct tnode* temp;
+	temp = createEmptyTreeNode();
+	temp->TYPE = TYPE;
+	temp->NODETYPE = NODETYPE;
+	temp->VALUE = VALUE;
+	temp->NAME = NAME;
+	temp->Ptr1 = Ptr1;
+	temp->Ptr2 = Ptr2;
+	temp->Ptr3 = Ptr3;
+	return temp;
+}
+
+int* getIdAddress(struct tnode* T){
+	int index = 0;
+	if(T->Ptr1 != NULL)
+        index = evaluateExpression(T->Ptr1);
+
+	return (Glookup(T->NAME)->BINDING + index);
+}
+
+int evaluateExpression(struct tnode* t){
+    int x,y;
+
+    if((t->NODETYPE) == CONST){
+        return t->VALUE;
+    }
+    else if(t->NODETYPE == ID){
+		return *getIdAddress(t);
+    }
+    else{
+        switch((t->NODETYPE)){
+			case EQ :
+					   x = evaluateExpression(t->Ptr1);
+					   y = evaluateExpression(t->Ptr2);
+					   if(x == y) return 1;
+					   else return 0;
+					   break;
+
+			case LT :
+					   x = evaluateExpression(t->Ptr1);
+					   y = evaluateExpression(t->Ptr2);
+					   if(x<y) return 1;
+					   else return 0;
+					   break;
+
+			case GT :
+					   x = evaluateExpression(t->Ptr1);
+					   y = evaluateExpression(t->Ptr2);
+					   if(x>y) return 1;
+					   else return 0;
+					   break;
+
+			case NEQ :
+					   x = evaluateExpression(t->Ptr1);
+					   y = evaluateExpression(t->Ptr2);
+					   if(x != y) return 1;
+					   else return 0;
+					   break;
+
+			case LE :
+					   x = evaluateExpression(t->Ptr1);
+					   y = evaluateExpression(t->Ptr2);
+					   if(x<=y) return 1;
+					   else return 0;
+					   break;
+
+			case GE :
+					   x = evaluateExpression(t->Ptr1);
+					   y = evaluateExpression(t->Ptr2);
+					   if(x>=y) return 1;
+					   else return 0;
+					   break;
+
+            case PLUS :
+                       x = evaluateExpression(t->Ptr1);
+                       y = evaluateExpression(t->Ptr2);
+                       return x+y;
+                       break;
+
+            case MINUS :
+                       x = evaluateExpression(t->Ptr1);
+                       y = evaluateExpression(t->Ptr2);
+                       return x-y;
+                       break;
+            case MUL :
+                       x = evaluateExpression(t->Ptr1);
+                       y = evaluateExpression(t->Ptr2);
+                        return x*y;
+                        break;
+            case DIV :
+                       x = evaluateExpression(t->Ptr1);
+                       y = evaluateExpression(t->Ptr2);
+                       if(y == 0){
+                       	printf("Divide by zero ERROR\n");
+                       	exit(1);
+                       }
+                       return x/y;
+            		   break;
+            case MOD :
+                       x = evaluateExpression(t->Ptr1);
+                       y = evaluateExpression(t->Ptr2);
+
+                       return x%y;
+            		   break;
+
+            case AND :
+                       x = evaluateExpression(t->Ptr1);
+                       y = evaluateExpression(t->Ptr2);
+                       return x && y;
+
+            case OR :
+                       x = evaluateExpression(t->Ptr1);
+                       y = evaluateExpression(t->Ptr2);
+                       return x || y;
+
+            case NOT :
+                       x = evaluateExpression(t->Ptr1);
+                       return !x;
+
+
+
+        }
+    }
+}
+
+void evaluate(struct tnode* T){
+	int *idAddress;
+	int val;
+	struct Gsymbol* entry;
+
+
+	if(T == NULL)
+        return;
+
+    // Statements List
+	if(T->TYPE == -1){
+		evaluate(T->Ptr1);
+		evaluate(T->Ptr2);
+	}else{
+		// Statement
+		switch(T->NODETYPE){
+			case READ:
+				idAddress =  getIdAddress(T->Ptr1);
+				scanf("%d", idAddress);
+				break;
+
+
+			case WRITE:
+				if(T->Ptr1->TYPE == BOOL){
+					if(T->Ptr1->NODETYPE == CONST){
+						if(T->Ptr1->VALUE == 0)
+                            printf("False\n");
+						else
+                            printf("True\n");
+					}
+					else{
+						val = evaluateExpression(T->Ptr1);
+						if(val == 0)
+                            printf("False\n");
+						else
+                            printf("True\n");
+					}
+				}else
+                    printf("%d\n", evaluateExpression(T->Ptr1));
+
+				break;
+
+
+
+			case ASSGN:
+				// Assignment Statement
+				if(T->Ptr1->TYPE == BOOL){
+					if(T->Ptr2->TYPE != BOOL){
+						printf("TYPE ASSIGN ERROR\n");
+						exit(1);
+					}
+				}
+				*getIdAddress(T->Ptr1) = evaluateExpression(T->Ptr2);
+				break;
+
+
+			case IF:
+				if(evaluateExpression(T->Ptr1))
+                    evaluate(T->Ptr2);
+				else
+                    evaluate(T->Ptr3);
+				break;
+
+
+			case WHILE:
+				while(evaluateExpression(T->Ptr1)){
+					evaluate(T->Ptr2);
+				}
+				break;
+		}
+	}
+
+}
+
+void updateEntry(struct tnode* T){
+	struct Gsymbol *entry = NULL;
+	entry = Glookup(T->NAME);
+
+	if(entry == NULL){
+		printf("Undeclared Variable %s\n", T->NAME);
+		exit(1);
+	}
+	T->TYPE = entry->TYPE;
+	T->Gentry = entry;
+}
+
+void typeCheckNodes(struct tnode* LEFT, struct tnode* RIGHT, int INT_BOOL){
+	if(LEFT->TYPE == RIGHT->TYPE && LEFT->TYPE == INT_BOOL)
+        return;
+
+	printf("TYPE ERROR LINE :: %d\n",1+line);
+	exit(1);
+}
+
+
+void typeCheckNode(struct tnode* LEFT, int INT_BOOL){
+	if(LEFT->TYPE == INT_BOOL)
+        return;
+
+	printf("TYPE ERROR LINE :: %d\n",1+line);
+	exit(1);
+}
+
+void typeCheckNodesEq(struct tnode* LEFT, struct tnode* RIGHT){
+	if(LEFT->TYPE == RIGHT->TYPE)
+        return;
+        
+	printf("TYPE ERROR LINE :: %d\n",1+line);
+	exit(1);
+}
