@@ -3,6 +3,7 @@ typedef struct Gsymbol {
 	int TYPE; 		// INT OR BOOLEAN
 	int SIZE; 		// Size field for arrays
 	int *BINDING; 	// Address of the Identifier in Memory
+	int stackAddress; 
 	struct Gsymbol *NEXT; // Pointer to next Symbol Table Entry */
 }Gsymbol;
 

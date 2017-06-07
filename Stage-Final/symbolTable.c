@@ -15,7 +15,7 @@ struct Gsymbol* Glookup(char *NAME){
     return iterator;
 }
 
-
+int currentStack = 4096;
 
 void Ginstall (char *NAME, int TYPE, int SIZE){
 
@@ -31,7 +31,8 @@ void Ginstall (char *NAME, int TYPE, int SIZE){
     newSymbol->TYPE = TYPE;
     newSymbol->SIZE = SIZE;
     newSymbol->BINDING = malloc(SIZE*sizeof(int));
-    *newSymbol->BINDING = 0;
+    newSymbol->stackAddress = currentStack;
+    currentStack += SIZE;
     newSymbol->NEXT = NULL;
 
     if(globalEnd == NULL){

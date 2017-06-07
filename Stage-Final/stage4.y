@@ -4,8 +4,13 @@
 	#include <string.h>
 
 	int vars[30];
+	FILE *fp = NULL;
+	FILE *target = NULL;
+
 	#include "symbolTable.h"
 	#include "exprtree.h"
+    #include "codegen.h"
+	#include "label.h"
 
 
 	int yylex(void);
@@ -52,7 +57,7 @@ boolIdList : ID ',' boolIdList 			            { Ginstall($1->NAME, BOOL, 1); }
 
 
 
-mainBlock : MAIN '(' ')' '{' Slist '}'              { evaluate($5); exit(1); }
+mainBlock : MAIN '(' ')' '{' Slist '}'              { targetGenerate($5); evaluate($5); exit(1); }
 
 
 Slist : Stmt Slist                                  { $$ = treeCreate(-1, -1, 0, '\0', $1, $2, NULL); }
@@ -96,6 +101,9 @@ E : E PLUS E 	                                    { typeCheckNodes($1, $3, INT);
 
 #include "symbolTable.c"
 #include "exprtree.c"
+#include "label.c"
+#include "codegen.c"
+
 
 yyerror(char const *s)
 {

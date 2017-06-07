@@ -1,0 +1,16 @@
+decl
+int k;
+enddecl
+
+main(){
+read(k);
+if(k==2)
+then
+k=k+3;
+else
+k=k+10;
+endif;
+
+write(k);
+
+}
